@@ -1,8 +1,8 @@
 import { useState, useEffect} from 'react'
-import axios from 'axios'
 import Person from './components/Person'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
+import Notification from './components/Notification'
 import personService from './services/Persons'
 
 const App = ({ }) => {
@@ -10,6 +10,8 @@ const App = ({ }) => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newFilter, setNewFilter] = useState('')
+  const [successMessage, setSuccessMessage] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
 
   useEffect(() => {
     personService
@@ -17,12 +19,21 @@ const App = ({ }) => {
       .then(initialPersons => {
         setPersons(initialPersons)
       })
-  }, [])
+  }, [persons])
 
   const handleNewName   = (event) => setNewName(event.target.value)
   const handleNewNumber = (event) => setNewNumber(event.target.value)
   const handleNewFilter = (event) => setNewFilter(event.target.value)
 
+  const succeeded = (name) => {
+    setSuccessMessage(
+      `Added ${name}`
+    )
+    setTimeout(() => {
+      setSuccessMessage(null)
+    }, 5000)
+  }
+  
   const addContact = (event) => {
     event.preventDefault()
     const match = persons.find(person => person.name.toLowerCase() === newName.toLowerCase())
@@ -32,8 +43,17 @@ const App = ({ }) => {
         .update(match.id, {...match, number: newNumber})
         .then(returnedPerson => {
           setPersons(persons.map(person => person.id !== match.id ? person : returnedPerson))
+          succeeded(newName)
         })
-        }
+        .catch(error => {
+          setErrorMessage( `Information of ${newName} has already been removed from server`)
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 5000)
+        })
+        setNewName('')
+        setNewNumber('')
+      }
     }
     else{
       const personObject = {
@@ -44,6 +64,13 @@ const App = ({ }) => {
         .create(personObject)
         .then(returnedPerson => {
           setPersons(persons.concat(returnedPerson))
+          succeeded(newName)
+        })
+        .catch(error => {
+          setErrorMessage(`Information of ${newName} has already been removed from server`)
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 5000)
         })
       setNewName('')
       setNewNumber('')
@@ -55,6 +82,7 @@ const App = ({ }) => {
       personService
       .remove(id)
       .then(setPersons(persons.filter(person => person.id !== id)))
+      .catch(error => {})
     }
   }
   const filteredPersons = (newFilter === '')
@@ -67,6 +95,8 @@ const App = ({ }) => {
   return (
     <div>
       <h1>Phonebook</h1>
+      <Notification message={errorMessage} isError={true}/>
+      <Notification message={successMessage} isError={false} />
       <Filter filter={newFilter} filterChange={handleNewFilter}/>
 
       <h2>Add a new</h2>
