@@ -3,6 +3,7 @@ import axios from 'axios'
 import Person from './components/Person'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
+import personService from './services/Persons'
 
 const App = ({ }) => {
   const [persons, setPersons] = useState([])
@@ -11,10 +12,10 @@ const App = ({ }) => {
   const [newFilter, setNewFilter] = useState('')
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        setPersons(response.data)
+    personService
+      .getAll()
+      .then(initialPersons => {
+        setPersons(initialPersons)
       })
   }, [])
 
@@ -24,19 +25,38 @@ const App = ({ }) => {
 
   const addContact = (event) => {
     event.preventDefault()
-    const names = persons.map(person => person.name.toLowerCase())
-    const numbers = persons.map(person => person.number)
-
-    if (names.includes(newName.toLowerCase()) || numbers.includes(newNumber)){
-      alert(`${newName} or ${newNumber} is already added to phonebook`)
+    const match = persons.find(person => person.name.toLowerCase() === newName.toLowerCase())
+    if (typeof match !== 'undefined'){
+      if(window.confirm(newName + " is already added to phonebook, replace the old number with a new one?")){
+      personService
+        .update(match.id, {...match, number: newNumber})
+        .then(returnedPerson => {
+          setPersons(persons.map(person => person.id !== match.id ? person : returnedPerson))
+        })
+        }
     }
     else{
-      setPersons(persons.concat({name: newName, number: newNumber}))
+      const personObject = {
+        name: newName,
+        number: newNumber
+      }
+      personService
+        .create(personObject)
+        .then(returnedPerson => {
+          setPersons(persons.concat(returnedPerson))
+        })
       setNewName('')
       setNewNumber('')
     }
   }
 
+  const handleRemove = (name, id) => {
+    if (window.confirm('Delete ' + name + '?')){
+      personService
+      .remove(id)
+      .then(setPersons(persons.filter(person => person.id !== id)))
+    }
+  }
   const filteredPersons = (newFilter === '')
     ? persons 
     : (persons.filter((person) => 
@@ -61,7 +81,7 @@ const App = ({ }) => {
       <h2>Numbers</h2>
       <ul>
         {filteredPersons.map(person => 
-          <Person key={person.name} name={person.name} number={person.number} />
+        <Person key={person.name} name={person.name} number={person.number} handleRemove={() => handleRemove(person.name, person.id)} />
         )}
       </ul>
     </div>
