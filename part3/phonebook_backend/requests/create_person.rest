@@ -1,0 +1,7 @@
+POST https://ken-phonebook.fly.dev/api/persons 
+Content-Type: application/json
+
+{
+  "name": "Kenneth",
+  "number": "305"
+}
