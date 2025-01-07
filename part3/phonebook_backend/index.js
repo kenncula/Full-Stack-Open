@@ -1,20 +1,32 @@
 const express = require('express')
-const morgan = require('morgan')
+// const morgan = require('morgan')
 const cors = require('cors')
 const app = express()
+const mongoose = require('mongoose')
+const url = process.env.MONGODB_URI;
+
+mongoose.set('strictQuery',false)
+mongoose.connect(url)
+
+const personSchema = new mongoose.Schema({
+  name: String,
+  number: String,
+})
+
+const Person = mongoose.model('Note', noteSchema)
 
 app.use(express.static('dist'))
 app.use(express.json())
 app.use(cors())
 
-morgan.token('post-body', (req, res)=>{ 
-  if (req.method == 'POST') {
-    return JSON.stringify(req.body)
-  }
-  return null
-})
+// morgan.token('post-body', (req, res)=>{ 
+//   if (req.method == 'POST') {
+//     return JSON.stringify(req.body)
+//   }
+//   return null
+// })
 
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post-body'));
+// app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post-body'));
 
 let persons = [
     { 
