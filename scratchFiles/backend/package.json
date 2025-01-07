@@ -11,9 +11,11 @@
   "author": "Ken Cula",
   "license": "MIT",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.21.2"
   },
   "devDependencies": {
+    "@flydotio/dockerfile": "^0.6.0",
     "nodemon": "^3.1.9"
   }
 }
