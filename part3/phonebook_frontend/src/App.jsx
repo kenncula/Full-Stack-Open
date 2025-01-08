@@ -37,7 +37,7 @@ const App = ({ }) => {
   const addContact = (event) => {
     event.preventDefault()
     const match = persons.find(person => person.name.toLowerCase() === newName.toLowerCase())
-    if (typeof match !== 'undefined'){
+    if (match){
       if(window.confirm(newName + " is already added to phonebook, replace the old number with a new one?")){
       personService
         .update(match.id, {...match, number: newNumber})
@@ -45,12 +45,8 @@ const App = ({ }) => {
           setPersons(persons.map(person => person.id !== match.id ? person : returnedPerson))
           succeeded(newName)
         })
-        .catch(error => {
-          setErrorMessage( `Information of ${newName} has already been removed from server`)
-          setTimeout(() => {
-            setErrorMessage(null)
-          }, 5000)
-        })
+        .catch(error => handleError(error)
+      )
         setNewName('')
         setNewNumber('')
       }
@@ -66,15 +62,24 @@ const App = ({ }) => {
           setPersons(persons.concat(returnedPerson))
           succeeded(newName)
         })
-        .catch(error => {
-          setErrorMessage(`Information of ${newName} has already been removed from server`)
-          setTimeout(() => {
-            setErrorMessage(null)
-          }, 5000)
-        })
+        .catch(error => handleError(error)
+      )
       setNewName('')
       setNewNumber('')
     }
+  }
+
+  const handleError = (error) => {
+    if(error.response){
+      setErrorMessage(error.response.data.error);
+    } else if (error.request){
+      setErrorMessage(`Error connecting to server: ${error.message}`)
+    } else {
+      setErrorMessage(`Unknown error ${error.message}`)
+    } 
+    setTimeout(() => {
+      setErrorMessage(null)
+    }, 5000)
   }
 
   const handleRemove = (name, id) => {
@@ -91,6 +96,7 @@ const App = ({ }) => {
       person.name.toLowerCase().includes(newFilter.toLowerCase()) 
       ? person 
       : null))
+
 
   return (
     <div>
